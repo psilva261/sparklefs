@@ -1,0 +1,4 @@
+/sparklefs
+*.log
+*.out
+*.test

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <script src="react.development.es5.js"></script>
+    <script src="react-dom.development.es5.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      const container = document.getElementById('root');
+      const root = ReactDOM.createRoot(container);
+      root.render(React.createElement('h1', null, 'Hello, world!'));
+    </script>
+  </body>
+</html>

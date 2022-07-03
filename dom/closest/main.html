@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <title>Demo</title>
+  <script src="../jquery-1.8.2.js"></script>
+  </head>
+<body>
+	<div id=d1 class=av>
+		<h2 id=b1 class=b>b1</h2>
+	</div>
+	<div id=d2 class=a>
+		<h2 id=b2 class=b>b2</h2>
+	</div>
+	<script>
+var clicked = 0;
+var cont = 0;
+function reg(el) {
+	$('.b', el).click(function() {
+		clicked++;
+    if ($(this).closest('.a, .av')[0] != el) {
+      // Only trigger the closest toggle header.
+      return;
+    }
+    cont++;
+
+    if ($(el).is('.a')) {
+      $(el)
+        .addClass('av')
+        .removeClass('a');
+    } else {
+      $(el)
+        .addClass('a')
+        .removeClass('av');
+    }
+	});
+}
+
+$('.a').each(function(i, el) {
+  reg(el);
+});
+$('.av').each(function(i, el) {
+  reg(el);
+});
+	</script>
+</body>
+</html>
