@@ -275,7 +275,6 @@ func (r *Runner) TriggerClick(selector string) (newHTML string, ok bool, err err
 		el := r.doc.Element()
 		el = el.QuerySelector(selector)
 		if el == nil {
-			//return "", false, fmt.Errorf("could not find '%v'", selector)
 			errCh <- fmt.Errorf("could not find '%v'", selector)
 			return
 		}

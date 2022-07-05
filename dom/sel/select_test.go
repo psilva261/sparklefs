@@ -292,7 +292,7 @@ func TestSelect31(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 	body := grep(d, "body")
-	es, err := Select(`div p:nth-child(2)`, body, true, false)
+	es, err := Select(`div p:nth-child(3)`, body, true, false)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -391,6 +391,58 @@ func TestSelect34(t *testing.T) {
 	}
 	e := es[0]
 	if e.Data != "i" {
+		t.Logf("data=%v %v", e.Data, render(e))
+		t.Fatalf("parent data=%v %v", e.Parent.Data, render(e.Parent))
+	}
+}
+
+func TestSelect35(t *testing.T) {
+	htm := `<html>
+	    <body>
+	        <header>
+	            <div>
+	            </div>
+	            <div>
+	                <ul>
+	                    <li>
+	                        <a>1st</a>
+	                    </li>
+	                    <li>
+	                        <a>2nd</a>
+	                    </li>
+	                    <li>
+	                        <a>3rd</a>
+	                    </li>
+	                    <li>
+	                        <a>4th</a>
+	                    </li>
+	                </ul>
+	                <a>≡</a>
+	            </div>
+	            <div>
+	                <ul>
+	                </ul>
+	                <a>x</a>
+	            </div>
+	        </header>
+	    </body>
+	</html>`
+	d, err := html.Parse(strings.NewReader(htm))
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	es, err := Select(`header:nth-child(1) > div:nth-child(3) > a:nth-child(2)`, d, false, false)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if l := len(es); l != 1 {
+		for _, e := range es {
+			t.Logf("data=%v %v", e.Data, render(e))
+		}
+		t.Fatalf("l=%v", l)
+	}
+	e := es[0]
+	if e.Data != "a" {
 		t.Logf("data=%v %v", e.Data, render(e))
 		t.Fatalf("parent data=%v %v", e.Parent.Data, render(e.Parent))
 	}

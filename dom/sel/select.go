@@ -84,28 +84,13 @@ func SelectSingle(sel string, el *html.Node, ignoreRoot, rootMustMatchFirst bool
 	if el.Type == html.TextNode || el.Type == html.CommentNode {
 		return
 	}
-	/*log.Infof("SelectSingle(%v, %v, ...)", sel, el.Data)
-	if sel == ":nth-child(2)" && el.Data == "i" {
-		log.Infof("hang in here")
-	}*/
 	sel = trimSpaces(sel)
 	sels := strings.Split(sel, " ")
 
 	var nthChild int = -1
-	s, _, err := explode(sels[0])
+	s, nthChild, err := explode(sels[0])
 	if err != nil {
 		return nil, fmt.Errorf("explode %v: %w", sels[0], err)
-	}
-	//log.Infof("len(sels)=%v", len(sels))
-	if len(sels) > 1 {
-		tmp := sels[1]
-		if tmp == ">" && len(sels) > 2 {
-			tmp = sels[2]
-		}
-		_, nthChild, err = explode(tmp)
-		if err != nil {
-			return nil, fmt.Errorf("explode' %v: %w", sels[1], err)
-		}
 	}
 	switch s {
 	case ">":
@@ -123,7 +108,7 @@ func SelectSingle(sel string, el *html.Node, ignoreRoot, rootMustMatchFirst bool
 			break
 		}
 
-		if ElementMatchesSingle(s, el, rootMustMatchFirst) || s == ":scope" {
+		if ElementMatchesSingle(s, el, rootMustMatchFirst, nthChild) || s == ":scope" {
 			if len(sels) > 1 {
 				sel = strings.Join(sels[1:], " ")
 				for c := el.FirstChild; c != nil; c = c.NextSibling {
@@ -153,7 +138,18 @@ func SelectSingle(sel string, el *html.Node, ignoreRoot, rootMustMatchFirst bool
 }
 
 // ElementMatchesSingle selects 1 cascade at a specific element
-func ElementMatchesSingle(sel string, el *html.Node, rootMustMatchFirst bool) bool {
+func ElementMatchesSingle(sel string, el *html.Node, rootMustMatchFirst bool, nthChild int) bool {
+	if nthChild > 0 {
+		kth := 1
+		for sib := el.PrevSibling; sib != nil; sib = sib.PrevSibling {
+			if sib.Type == html.ElementNode {
+				kth++
+			}
+		}
+		if kth != nthChild {
+			return false
+		}
+	}
 	if sel == "*" {
 		return true
 	}
