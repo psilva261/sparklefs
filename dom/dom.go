@@ -8,6 +8,7 @@ import (
 	"github.com/psilva261/sparklefs/logger"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
+	"strconv"
 	"strings"
 )
 
@@ -27,6 +28,8 @@ var (
 	elVars = make(map[*Element]map[string]js.Value)
 	evVars = make(map[*Event]map[string]js.Value)
 )
+
+var Geom func(sel string) (string, error)
 
 func Mutations() <-chan Mutation {
 	return mutations
@@ -1129,7 +1132,9 @@ func (el *Element) DispatchEvent(ei any) bool {
 	default:
 		log.Fatalf("unknown type %T", ei)
 	}
-	//e.Target = el
+	if e.Target == nil {
+		e.Target = el
+	}
 	e.CurrentTarget = el
 	e.SrcElement = el
 	if e.CancelBubble {
@@ -1307,6 +1312,8 @@ func (el *Element) Getters() map[string]bool {
 		"href":            true,
 		"data":            true,
 		"length":          true,
+		"offsetHeight":    true,
+		"offsetWidth":     true,
 	}
 }
 
@@ -2053,8 +2060,42 @@ func (el *Element) Style() *js.Object {
 	})
 }
 
-func (el *Element) GetClientRects() *DOMRect {
-	return &DOMRect{}
+func (el *Element) OffsetHeight() int {
+	x1, _, x2, _ := el.geom()
+	return x2-x1
+}
+
+func (el *Element) OffsetWidth() int {
+	_, y1, _, y2 := el.geom()
+	return y2-y1
+}
+
+func (el *Element) geom() (x1, y1, x2, y2 int) {
+	if Geom == nil {
+		log.Errorf("Geom is nil")
+		return
+	}
+	p, ok := path(el)
+	if !ok {
+		log.Errorf("path lookup failed")
+		return
+	}
+	geom, err := Geom(p)
+	if err != nil {
+		log.Errorf("geom %v: %v", p, err)
+		return
+	}
+	items := strings.Split(geom, ",")
+	x1, _ = strconv.Atoi(items[0])
+	y1, _ = strconv.Atoi(items[1])
+	x2, _ = strconv.Atoi(items[2])
+	y2, _ = strconv.Atoi(items[3])
+	return
+}
+
+func (el *Element) GetClientRects() *js.Object {
+	return vm.NewDynamicObject(&DOMRect{
+	})
 }
 
 func (el *Element) GetBoundingClientRect() *DOMRect {
@@ -2339,4 +2380,32 @@ func normalize(n *html.Node) {
 		}
 	}
 	// TODO: mutation
+}
+
+func path(el *Element) (pth string, ok bool) {
+	var p *Element
+
+	if el == nil {
+		return
+	}
+	if el.TagName() == "BODY" {
+		return "/0", true
+	}
+	p = el.d.getEl(el.n.Parent)
+
+	if p != nil {
+		i := 0
+		for n := p.n.FirstChild; n != nil; n = n.NextSibling {
+			if n == el.n {
+				pre, ok := path(p)
+				if ok {
+					return pre + "/" + strconv.Itoa(i), true
+				}
+			}
+			if n.Type == html.ElementNode || (n.Type == html.TextNode && strings.TrimSpace(n.Data) != "") {
+				i++
+			}
+		}
+	}
+	return
 }

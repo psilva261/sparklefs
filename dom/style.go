@@ -114,9 +114,15 @@ func (s *Style) Set(k string, desc js.PropertyDescriptor) bool {
 	return true
 }
 
-func (s *Style) Has(key string) (yes bool) {
-	log.Printf("style has? %v", key)
-	return true
+func (s *Style) Has(k string) (yes bool) {
+	log.Printf("style has? %v", k)
+	k = kebab(k)
+	st := attr(*s.n, "style")
+	m := parseStyle(st)
+	if s, ok := m[k]; ok && s != "" {
+		return true
+	}
+	return HasCall(s, k)
 }
 
 func (s *Style) Delete(key string) bool {
@@ -161,7 +167,20 @@ func (dr *DOMRect) Obj() *js.Object {
 	return vm.NewDynamicObject(dr)
 }
 
+func (dr *DOMRect) Getters() map[string]bool {
+	return map[string]bool{
+		"length": true,
+	}
+}
+
+func (dr *DOMRect) Props() map[string]bool {
+	return map[string]bool{}
+}
+
 func (dr *DOMRect) Get(k string) (v js.Value) {
+	if res, ok := GetCall(dr, k); ok {
+		return res
+	}
 	return vm.ToValue(nil)
 }
 
@@ -169,11 +188,14 @@ func (dr *DOMRect) Set(k string, desc js.PropertyDescriptor) bool {
 	return true
 }
 
-func (dr *DOMRect) Has(key string) bool {
-	return true
+func (dr *DOMRect) Has(k string) bool {
+	if yes := HasCall(dr, k); yes {
+		return true
+	}
+	return false
 }
 
-func (dr *DOMRect) Delete(key string) bool {
+func (dr *DOMRect) Delete(k string) bool {
 	return false
 }
 

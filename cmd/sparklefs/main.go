@@ -30,7 +30,7 @@ var (
 )
 
 func usage() {
-	log.Printf("usage: sparklefs [-s service] [-m mtpt] [-h htmlfile jsfile1 [jsfile2] [..]]")
+	log.Printf("usage: sparklefs [-v] [-s service] [-m mtpt] [-h htmlfile jsfile1 [jsfile2] [..]]")
 	os.Exit(1)
 }
 
@@ -97,7 +97,7 @@ func ctl(conn net.Conn) {
 		} else {
 			log.Printf("htm=%v", htm)
 		}
-		d = runner.New(htm, xhr, query)
+		d = runner.New(htm, xhr, geom, query)
 		d.Start()
 		initialized := false
 		for i, s := range js {
@@ -170,6 +170,21 @@ func kebab(s string) string {
 	return strings.ToLower(k)
 }
 
+func geom(sel string) (val string, err error) {
+	log.Printf("get geom(%v)", sel)
+	fn := sel + "/geom"
+	rwc, err := open(fn)
+	if err != nil {
+		log.Printf("get geom(%v): failed", sel)
+		return "", fmt.Errorf("open %v: %v", fn, err)
+	}
+	defer rwc.Close()
+	bs, err := io.ReadAll(rwc)
+	val = string(bs)
+	log.Printf("get geom(%v) = %v", sel, val)
+	return
+}
+
 func query(sel, prop string) (val string, err error) {
 	log.Printf("run query(%v, %v)", sel, prop)
 	fn := sel + "/style/" + kebab(prop)
@@ -221,6 +236,8 @@ func main() {
 
 	for len(args) > 0 {
 		switch args[0] {
+		case "-v":
+			log.Debug = true
 		case "-s":
 			service, args = args[1], args[2:]
 		case "-h":

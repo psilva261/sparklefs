@@ -812,6 +812,87 @@ $( function() {
 	t.Logf("h=%+v", <-resCh)
 }
 
+func TestJQueryUIDatepicker(t *testing.T) {
+	ResetCalls()
+	defer PrintCalls()
+	Geom = func(string) (string, error) { return "1,1,700,70", nil }
+	defer func() { Geom = nil }()
+	files := make(map[string][]byte)
+	var err error
+	for _, fn := range []string{"jquery-3.6.0.js", "jquery-ui.js", "datepicker.html", "jquery-ui.css", "style.css"} {
+		files[fn], err = os.ReadFile("jqueryui/" + fn)
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+	}
+	j := string(files["jquery-3.6.0.js"]) + string(files["jquery-ui.js"]) + `
+$( function() {
+	$( "#datepicker" ).datepicker();
+} );
+	`
+	htm := string(files["datepicker.html"])
+	loop := eventloop.NewEventLoop()
+	errCh := make(chan error, 1)
+	done := make(chan int, 1)
+	loop.Start()
+	defer loop.Stop()
+	var d *Document
+	loop.RunOnLoop(func(vm *js.Runtime) {
+		var err error
+		d, err = Init(vm, htm, "")
+		if err != nil {
+			errCh <- fmt.Errorf("main: %w", err)
+			return
+		}
+		_, err = vm.RunString(j)
+		if err != nil {
+			errCh <- err
+			return
+		}
+		if err = d.Close(); err != nil {
+			errCh <- err
+			return
+		}
+		h := d.QuerySelector("body").OuterHTML()
+		t.Logf("h=%+v", h)
+		done <- 1
+	})
+	select {
+	case err := <-errCh:
+		t.Fatalf("%v", err)
+	case <-done:
+	}
+	<-time.After(time.Second)
+	resCh := make(chan string, 1)
+	loop.RunOnLoop(func(vm *js.Runtime) {
+		e := &Event{
+			Type: "focus",
+		}
+		consumed := d.QuerySelector("#datepicker").DispatchEvent(e)
+		if !consumed {
+			errCh <- fmt.Errorf("expected click to be consumed")
+			return
+		}
+		if pos := d.QuerySelector("#ui-datepicker-div").Style().Get("position").String(); pos != "absolute" {
+			errCh <- fmt.Errorf("expected pos absolute")
+			return
+		}
+		/*if d := d.QuerySelector("#ui-datepicker-div").Style().Get("display").String(); d != "block" {
+			errCh <- fmt.Errorf("expected display block but got %v", d)
+			return
+		}*/
+		h := d.QuerySelector("body").OuterHTML()
+		resCh <- h
+		done <- 1
+	})
+	select {
+	case err := <-errCh:
+		t.Fatalf("%v", err)
+	case <-done:
+	}
+	t.Logf("h=%+v", <-resCh)
+}
+
 func TestOnClick(t *testing.T) {
 	htm := `
 <!DOCTYPE html>
@@ -1098,6 +1179,7 @@ document.addEventListener('click', f);
 				return fmt.Errorf("expect 3 but got %v", len(l))
 			}
 			for i, r := range l {
+				t.Logf("i=%v", i)
 				m := r.(map[string]any)
 				switch i {
 				case 0: // <p>

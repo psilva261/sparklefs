@@ -54,6 +54,7 @@ type Runner struct {
 	html       string
 	outputHtml string
 	doc        *dom.Document
+	geom       func(sel string) (val string, err error)
 	query      func(sel, prop string) (val string, err error)
 	xhrq       func(req *http.Request) (resp *http.Response, err error)
 }
@@ -61,11 +62,13 @@ type Runner struct {
 func New(
 	html string,
 	xhr func(req *http.Request) (resp *http.Response, err error),
+	geom func(sel string) (val string, err error),
 	query func(sel, prop string) (val string, err error),
 ) (r *Runner) {
 	r = &Runner{
 		html:  html,
 		xhrq:  xhr,
+		geom:  geom,
 		query: query,
 	}
 	return
@@ -163,6 +166,7 @@ func (r *Runner) initVM(vm *js.Runtime) (err error) {
 	}
 
 	//vm.SetFieldNameMapper(js.TagFieldNameMapper("json", true))
+	dom.Geom = r.geom
 	vm.Set("opossum", S{
 		HTML:     r.html,
 		Origin:   origin,
@@ -282,6 +286,7 @@ func (r *Runner) TriggerClick(selector string) (newHTML string, ok bool, err err
 		var h string
 		var e *dom.MouseEvent
 		var e2 *dom.Event
+		var e3 *dom.Event
 		if consumed = el.Clic(); consumed {
 			goto done
 		}
@@ -299,6 +304,13 @@ func (r *Runner) TriggerClick(selector string) (newHTML string, ok bool, err err
 		}
 		el.DispatchEvent(e2)
 		if consumed = e2.Consumed; consumed {
+			goto done
+		}
+		e3 = &dom.Event{
+			Type: "focus",
+		}
+		el.DispatchEvent(e3)
+		if consumed = e3.Consumed; consumed {
 			goto done
 		}
 		if h = el.OuterHTML(); len(h) > 20 {
