@@ -237,6 +237,7 @@ func main() {
 	for len(args) > 0 {
 		switch args[0] {
 		case "-v":
+			args = args[1:]
 			log.Debug = true
 		case "-s":
 			service, args = args[1], args[2:]
