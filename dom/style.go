@@ -161,6 +161,68 @@ func parseStyle(st string) (m map[string]string) {
 	return
 }
 
+type ComputedStyle struct{
+	el *Element
+}
+
+func (cs *ComputedStyle) Obj() *js.Object {
+	return vm.NewDynamicObject(cs)
+}
+
+func (cs *ComputedStyle) Getters() map[string]bool {
+	return map[string]bool{
+	}
+}
+
+func (cs *ComputedStyle) Props() map[string]bool {
+	return map[string]bool{}
+}
+
+func (cs *ComputedStyle) Get(k string) (v js.Value) {
+	if res, ok := GetCall(cs, k); ok {
+		return res
+	}
+	return vm.ToValue(nil)
+}
+
+func (cs *ComputedStyle) Set(k string, desc js.PropertyDescriptor) bool {
+	log.Errorf("computed style is read-only")
+	return false
+}
+
+func (cs *ComputedStyle) Has(k string) bool {
+	if yes := HasCall(cs, k); yes {
+		return true
+	}
+	return false
+}
+
+func (cs *ComputedStyle) Delete(k string) bool {
+	return false
+}
+
+func (cs *ComputedStyle) Keys() []string {
+	return []string{""}
+}
+
+func (cs *ComputedStyle) GetPropertyValue(k string) string {
+	if Query == nil {
+		log.Errorf("nil Query func")
+		return ""
+	}
+	p, ok := path(cs.el)
+	if !ok {
+		log.Errorf("path lookup failed")
+		return ""
+	}
+	res, err := Query(p, k)
+	if err != nil {
+		log.Errorf("query: %v", err)
+		return ""
+	}
+	return res
+}
+
 type DOMRect struct{}
 
 func (dr *DOMRect) Obj() *js.Object {

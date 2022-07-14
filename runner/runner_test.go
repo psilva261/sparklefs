@@ -425,7 +425,7 @@ func TestJQueryCss(t *testing.T) {
 	</html>
 	`
 	q := func(sel, prop string) (val string, err error) {
-		if sel != "/0/1" {
+		if sel != "/0/0" {
 			panic(sel)
 		}
 		if prop != "display" {
@@ -725,7 +725,7 @@ func TestMutationEvents(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 	q := func(sel, prop string) (val string, err error) {
-		if sel != "/0/1" {
+		if sel != "/0/0" {
 			t.Fatalf(sel)
 		}
 		if prop != "display" {

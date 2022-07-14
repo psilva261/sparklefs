@@ -167,19 +167,11 @@ func (r *Runner) initVM(vm *js.Runtime) (err error) {
 
 	//vm.SetFieldNameMapper(js.TagFieldNameMapper("json", true))
 	dom.Geom = r.geom
+	dom.Query = r.query
 	vm.Set("opossum", S{
 		HTML:     r.html,
 		Origin:   origin,
 		Referrer: func() string { return origin },
-		Style: func(sel, pseudo, prop, prop2 string) string {
-			v, err := r.query(sel, prop)
-			if err != nil {
-				log.Printf("sparkle fs: runner: query %v: %v", sel, err)
-				return ""
-			}
-			log.Printf("call query(%v, %v)=%v", sel, prop, v)
-			return v
-		},
 		XHR:  r.xhr,
 		Btoa: Btoa,
 	})

@@ -29,7 +29,10 @@ var (
 	evVars = make(map[*Event]map[string]js.Value)
 )
 
-var Geom func(sel string) (string, error)
+var (
+	Geom func(sel string) (string, error)
+	Query func(sel, prop string) (val string, err error)
+)
 
 func Mutations() <-chan Mutation {
 	return mutations
@@ -148,9 +151,9 @@ func (w *Window) Get(k string) js.Value {
 		return HTMLInputElementPrototype
 	case "getComputedStyle":
 		return vm.ToValue(func(args ...any) js.Value {
-			log.Printf("getComputedStyle(%v)", args)
+			log.Printf("getComputedStyle(%v)", args...)
 			el := args[0].(*Element)
-			s := &Style{n: el.n}
+			s := &ComputedStyle{el: el}
 			return s.Obj()
 		})
 	case "Event":

@@ -7,13 +7,6 @@ window.screen = {
 };
 window.screenX = 0;
 window.screenY = 25;
-window.getComputedStyle = function(el, pseudo) {
-	this.el = el;
-	this.getPropertyValue = function(prop) {
-		return opossum.style(___path('', el), pseudo, prop, arguments[2]);
-	};
-	return this;
-};
 
 btoa = opossum.btoa;
 
