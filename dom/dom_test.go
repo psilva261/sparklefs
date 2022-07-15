@@ -812,11 +812,93 @@ $( function() {
 	t.Logf("h=%+v", <-resCh)
 }
 
-func TestJQueryUIDatepicker(t *testing.T) {
+func TestJqueryFadeIn(t *testing.T) {
 	ResetCalls()
 	defer PrintCalls()
 	Geom = func(string) (string, error) { return "1,1,700,70", nil }
 	defer func() { Geom = nil }()
+	Query = func(sel, prop string) (string, error) {
+		if prop == "display" {
+			return "none", nil
+		}
+		return "", nil
+	}
+	defer func() { Query = nil }()
+
+	htm := `
+<html>
+<body>
+<p style="display: none">yolo</p>
+</body>
+</html>
+	`
+	bs, err := os.ReadFile("jqueryui/jquery-3.6.0.js")
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	j := string(bs)
+	var d *Document
+	loop := eventloop.NewEventLoop()
+	errCh := make(chan error, 1)
+	done := make(chan int, 1)
+	loop.Start()
+	defer loop.Stop()
+	loop.RunOnLoop(func(vm *js.Runtime) {
+		var err error
+		d, err = Init(vm, htm, j)
+		if err != nil {
+			errCh <- fmt.Errorf("main: %w", err)
+			return
+		}
+		if err = d.Close(); err != nil {
+			errCh <- err
+			return
+		}
+		res, err := vm.RunString(`
+$('p').fadeIn('fast');
+		`)
+		if err != nil {
+			errCh <- err
+			return
+		}
+		t.Logf("res=%v", res)
+		done <- 1
+	})
+	select {
+	case err := <-errCh:
+		t.Fatalf("%v", err)
+	case <-done:
+	}
+	<-time.After(time.Second)
+	resCh := make(chan string, 1)
+	loop.RunOnLoop(func(vm *js.Runtime) {
+		disp := d.getEl(d.QuerySelector("p").n).Style().Get("display").String()
+		if disp != "block" {
+			errCh <- fmt.Errorf("expected '' but got %v", d)
+			return
+		}
+		h := d.QuerySelector("body").OuterHTML()
+		resCh <- h
+		done <- 1
+	})
+	select {
+	case err := <-errCh:
+		t.Fatalf("%v", err)
+	case <-done:
+	}
+	t.Logf("h=%+v", <-resCh)
+}
+
+func TestJQueryUIDatepicker(t *testing.T) {
+	ResetCalls()
+	defer PrintCalls()
+	var d *Document
+	Geom = func(string) (string, error) { return "1,1,700,70", nil }
+	defer func() { Geom = nil }()
+	Query = func(sel, prop string) (string, error) {
+		return "", nil
+	}
+	defer func() { Query = nil }()
 	files := make(map[string][]byte)
 	var err error
 	for _, fn := range []string{"jquery-3.6.0.js", "jquery-ui.js", "datepicker.html", "jquery-ui.css", "style.css"} {
@@ -836,7 +918,6 @@ $( function() {
 	done := make(chan int, 1)
 	loop.Start()
 	defer loop.Stop()
-	var d *Document
 	loop.RunOnLoop(func(vm *js.Runtime) {
 		var err error
 		d, err = Init(vm, htm, "")
@@ -873,6 +954,18 @@ $( function() {
 			errCh <- fmt.Errorf("expected click to be consumed")
 			return
 		}
+		done <- 1
+	})
+	select {
+	case err := <-errCh:
+		t.Fatalf("%v", err)
+	case <-done:
+	}
+	errCh = make(chan error, 1)
+	resCh = make(chan string, 1)
+	done = make(chan int, 1)
+	<-time.After(time.Second)
+	loop.RunOnLoop(func(vm *js.Runtime) {
 		if pos := d.QuerySelector("#ui-datepicker-div").Style().Get("position").String(); pos != "absolute" {
 			errCh <- fmt.Errorf("expected pos absolute")
 			return

@@ -161,7 +161,7 @@ func parseStyle(st string) (m map[string]string) {
 	return
 }
 
-type ComputedStyle struct{
+type ComputedStyle struct {
 	el *Element
 }
 
@@ -170,8 +170,7 @@ func (cs *ComputedStyle) Obj() *js.Object {
 }
 
 func (cs *ComputedStyle) Getters() map[string]bool {
-	return map[string]bool{
-	}
+	return map[string]bool{}
 }
 
 func (cs *ComputedStyle) Props() map[string]bool {
@@ -181,6 +180,10 @@ func (cs *ComputedStyle) Props() map[string]bool {
 func (cs *ComputedStyle) Get(k string) (v js.Value) {
 	if res, ok := GetCall(cs, k); ok {
 		return res
+	}
+	res := cs.GetPropertyValue(k)
+	if res != "" {
+		return vm.ToValue(v)
 	}
 	return vm.ToValue(nil)
 }

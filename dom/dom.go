@@ -10,6 +10,7 @@ import (
 	"golang.org/x/net/html/atom"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -30,7 +31,7 @@ var (
 )
 
 var (
-	Geom func(sel string) (string, error)
+	Geom  func(sel string) (string, error)
 	Query func(sel, prop string) (val string, err error)
 )
 
@@ -86,6 +87,8 @@ type Window struct {
 
 	obj  *js.Object
 	vars map[string]js.Value
+
+	animationFrame func(js.FunctionCall) js.Value
 
 	builtinThis    *js.Object
 	eventListeners map[string][]func(js.FunctionCall) js.Value
@@ -151,10 +154,14 @@ func (w *Window) Get(k string) js.Value {
 		return HTMLInputElementPrototype
 	case "getComputedStyle":
 		return vm.ToValue(func(args ...any) js.Value {
-			log.Printf("getComputedStyle(%v)", args...)
 			el := args[0].(*Element)
+			log.Printf("getComputedStyle(%v)", el)
 			s := &ComputedStyle{el: el}
 			return s.Obj()
+		})
+	case "requestAnimationFrame":
+		return vm.ToValue(func(f func(js.FunctionCall) js.Value) {
+			w.animationFrame = f
 		})
 	case "Event":
 		return vm.ToValue(func(call js.ConstructorCall) *js.Object {
@@ -245,6 +252,23 @@ func (w *Window) Delete(key string) bool {
 
 func (w *Window) Keys() []string {
 	return []string{""}
+}
+
+func (w *Window) RenderAnimationFrame() (ok bool) {
+	if w.animationFrame == nil {
+		return false
+	}
+	fn, ok := js.AssertFunction(vm.ToValue(w.animationFrame))
+	if !ok {
+		log.Errorf("request animation frame assert function: %v", ok)
+		return
+	}
+	t := time.Now().UnixMilli()
+	_, err := fn(nil, vm.ToValue(float64(t)))
+	if err != nil {
+		log.Infof("run anim cb: %v", err)
+	}
+	return true
 }
 
 func (w *Window) addEventListener(e string, f func(js.FunctionCall) js.Value) {
@@ -2065,12 +2089,12 @@ func (el *Element) Style() *js.Object {
 
 func (el *Element) OffsetHeight() int {
 	x1, _, x2, _ := el.geom()
-	return x2-x1
+	return x2 - x1
 }
 
 func (el *Element) OffsetWidth() int {
 	_, y1, _, y2 := el.geom()
-	return y2-y1
+	return y2 - y1
 }
 
 func (el *Element) geom() (x1, y1, x2, y2 int) {
@@ -2097,8 +2121,7 @@ func (el *Element) geom() (x1, y1, x2, y2 int) {
 }
 
 func (el *Element) GetClientRects() *js.Object {
-	return vm.NewDynamicObject(&DOMRect{
-	})
+	return vm.NewDynamicObject(&DOMRect{})
 }
 
 func (el *Element) GetBoundingClientRect() *DOMRect {
