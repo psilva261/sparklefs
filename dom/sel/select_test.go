@@ -448,6 +448,33 @@ func TestSelect35(t *testing.T) {
 	}
 }
 
+func TestSelect36(t *testing.T) {
+	htm := `
+<html>
+<body>
+<p id="a.b"></p>
+</body>
+</html>
+	`
+	d, err := html.Parse(strings.NewReader(htm))
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	body := grep(d, "body")
+	es, err := Select(`#a\\.b`, body, true, false)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if len(es) != 1 {
+		t.Fail()
+	}
+	e := es[0]
+	t.Logf("res=%v %T", e, e)
+	if e.Data != "p" {
+		t.Fail()
+	}
+}
+
 func TestSplitBlock(t *testing.T) {
 	tt := map[string][]string{
 		"a":                  []string{"a"},
@@ -455,6 +482,7 @@ func TestSplitBlock(t *testing.T) {
 		".foo":               []string{".foo"},
 		"a.c":                []string{"a", ".c"},
 		"a.c#d":              []string{"a", ".c", "#d"},
+		`a\\.c#d`:            []string{`a\\.c`, "#d"},
 		"[selected]":         []string{"[selected]"},
 		"[type=submit]":      []string{"[type=submit]"},
 		"input[type=submit]": []string{"input", "[type=submit]"},

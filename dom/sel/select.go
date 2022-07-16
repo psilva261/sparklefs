@@ -163,7 +163,7 @@ func ElementMatchesSingle(sel string, el *html.Node, rootMustMatchFirst bool, nt
 		found := false
 		if strings.HasPrefix(sel, "#") || strings.HasPrefix(sel, ".") || strings.HasPrefix(sel, "[") || strings.HasPrefix(sel, ":") {
 			q := sel
-			if strings.HasPrefix(sel, "#") && attr(*el, "id") == q[1:] {
+			if strings.HasPrefix(sel, "#") && attr(*el, "id") == strings.ReplaceAll(q[1:], `\\`, ``) {
 				found = true
 			} else if strings.HasPrefix(sel, ".") && matchesClasses(el, []string{q[1:]}) {
 				found = true
@@ -211,7 +211,7 @@ func splitBlock(sb string) (l []string, err error) {
 			tmp = ""
 		}
 	}
-	for _, ch := range sb {
+	for i, ch := range sb {
 		switch ch {
 		case ']':
 			tmp += string([]byte{byte(ch)})
@@ -223,7 +223,7 @@ func splitBlock(sb string) (l []string, err error) {
 			paranth = false
 			tmp += string([]byte{byte(ch)})
 		case '.', '#', '[', ':':
-			if !strings.HasSuffix(tmp, `\\`) {
+			if i < 2 || sb[i-1] != '\\' || sb[i-2] != '\\' {
 				flush()
 			}
 			fallthrough
