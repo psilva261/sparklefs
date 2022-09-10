@@ -1,6 +1,7 @@
 package dom
 
 import (
+	"github.com/psilva261/sparkle/js"
 	"golang.org/x/net/html"
 	"time"
 )
@@ -65,4 +66,53 @@ func addMutation(d *Document, t MutationType, n *html.Node) {
 	case mutations <- m:
 	default:
 	}
+}
+
+type MutObserver struct{}
+
+func NewMutObserver() *js.Object {
+	m := &MutObserver{}
+	return m.Obj()
+}
+
+func (m *MutObserver) Obj() *js.Object {
+	return vm.NewDynamicObject(m)
+}
+
+func (m *MutObserver) Getters() map[string]bool {
+	return map[string]bool{
+	}
+}
+
+func (m *MutObserver) Props() map[string]bool {
+	return map[string]bool{}
+}
+
+func (m *MutObserver) Get(k string) (v js.Value) {
+	if res, ok := GetCall(m, k); ok {
+		return res
+	}
+	return vm.ToValue(nil)
+}
+
+func (m *MutObserver) Set(k string, desc js.PropertyDescriptor) bool {
+	return true
+}
+
+func (m *MutObserver) Has(k string) bool {
+	if yes := HasCall(m, k); yes {
+		return true
+	}
+	return false
+}
+
+func (m *MutObserver) Delete(k string) bool {
+	return false
+}
+
+func (m *MutObserver) Keys() []string {
+	return []string{""}
+}
+
+func (m *MutObserver) Observe(target *Element, opts map[string]any) {
 }

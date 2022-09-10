@@ -8,6 +8,7 @@ import (
 	"github.com/psilva261/sparklefs/logger"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -163,6 +164,28 @@ func (w *Window) Get(k string) js.Value {
 		return vm.ToValue(func(f func(js.FunctionCall) js.Value) {
 			w.animationFrame = f
 		})
+	case "SVGElement":
+		return vm.ToValue(func(call js.ConstructorCall) *js.Object {
+			doc := call.Argument(0).String()
+			s := NewSVG(doc)
+			sv := vm.ToValue(s).(*js.Object)
+			sv.SetPrototype(call.This.Prototype())
+			return sv
+		})
+	case "DOMParser":
+		return vm.ToValue(func(call js.ConstructorCall) *js.Object {
+			dp := NewDOMParser()
+			dpv := vm.ToValue(dp).(*js.Object)
+			dpv.SetPrototype(call.This.Prototype())
+			return dpv
+		})
+	case "MutationObserver":
+		return vm.ToValue(func(call js.ConstructorCall) *js.Object {
+			m := NewMutObserver()
+			mv := vm.ToValue(m).(*js.Object)
+			mv.SetPrototype(call.This.Prototype())
+			return mv
+		})
 	case "Event":
 		return vm.ToValue(func(call js.ConstructorCall) *js.Object {
 			var opts map[string]interface{}
@@ -192,6 +215,15 @@ func (w *Window) Get(k string) js.Value {
 			ev := vm.ToValue(e).(*js.Object)
 			ev.SetPrototype(call.This.Prototype())
 			return ev
+		})
+	case "Comment":
+		return vm.ToValue(func(call js.ConstructorCall) *js.Object {
+			var data string
+			if len(call.Arguments) >= 1 {
+				data = call.Argument(0).String()
+			}
+			el := w.Document.CreateComment(data)
+			return el.Obj()
 		})
 	case "Image":
 		return vm.ToValue(func(call js.ConstructorCall) *js.Object {
@@ -444,8 +476,8 @@ func (d *Document) Domain() string {
 	return "www.example.com"
 }
 
-func (d *Document) Location() *Location {
-	return d.Window.Location
+func (d *Document) Location() *js.Object {
+	return d.Window.Location.Obj()
 }
 
 func (d *Document) Referrer() string {
@@ -552,6 +584,10 @@ func (d *Document) CreateProcessingInstruction(target, data string) *Element {
 		},
 	}
 	return d.getEl(n)
+}
+
+func (d *Document) CreateTreeWalker(opts ...any) *TreeWalker {
+	return NewTreeWalker()
 }
 
 func (d *Document) CloneNode(deep ...bool) *Element {
@@ -1038,6 +1074,22 @@ func (el *Element) LocalName() string {
 	return el.n.Data
 }
 
+func (el *Element) Content() js.Value {
+	if el.n.Data == "template" {
+		df := el.d.CreateDocumentFragment()
+		for n := el.n.FirstChild; n != nil; n = n.NextSibling {
+			if n.Type != html.ElementNode {
+				continue
+			}
+			df.AppendChild(el.d.getEl(n).CloneNode(true))
+		}
+		return df.Obj()
+	} else {
+		log.Errorf("content called for non-template element")
+	}
+	return vm.ToValue(el.text())
+}
+
 func (el *Element) TextContent() string {
 	return el.text()
 }
@@ -1321,6 +1373,7 @@ func (el *Element) Getters() map[string]bool {
 		"value":           true,
 		"selected":        true,
 		"checked":         true,
+		"content":         true,
 		"textContent":     true,
 		"innerHTML":       true,
 		"outerHTML":       true,
@@ -1337,6 +1390,9 @@ func (el *Element) Getters() map[string]bool {
 		"children":        true,
 		"hash":            true,
 		"href":            true,
+		"src":             true,
+		"hostname":        true,
+		"pathname":        true,
 		"data":            true,
 		"length":          true,
 		"offsetHeight":    true,
@@ -1462,6 +1518,38 @@ func (el *Element) Href() js.Value {
 		return vm.ToValue("https://example.com" + href)
 	}
 	return vm.ToValue(href)
+}
+
+func (el *Element) Src() js.Value {
+	src := attr(*el.n, "src")
+	if strings.HasPrefix(src, "#") {
+		return vm.ToValue("https://example.com" + src)
+	}
+	return vm.ToValue(src)
+}
+
+func (el *Element) Hostname() js.Value {
+	h := attr(*el.n, "href")
+	if h != "" {
+		if u, err := url.Parse(h); err == nil {
+			h = u.Path
+		} else {
+			log.Errorf("hostname %v: %v", h, err)
+		}
+	}
+	return vm.ToValue(h)
+}
+
+func (el *Element) Pathname() js.Value {
+	p := attr(*el.n, "href")
+	if p != "" {
+		if u, err := url.Parse(p); err == nil {
+			p = u.Path
+		} else {
+			log.Errorf("pathname %v: %v", p, err)
+		}
+	}
+	return vm.ToValue(p)
 }
 
 func (el *Element) Set(key string, desc js.PropertyDescriptor) bool {
@@ -1659,6 +1747,18 @@ func (el *Element) getElementsByName(name string) (els []*Element) {
 		els = append(els, el.d.getEl(n))
 	}
 	return
+}
+
+func (el *Element) Contains(o *Element) bool {
+	if el == o {
+		return false
+	}
+	for ch := el.n.FirstChild; ch != nil; ch = ch.NextSibling {
+		if chEl := el.d.getEl(ch); chEl == o || chEl.Contains(o) {
+			return true
+		}
+	}
+	return false
 }
 
 func (el *Element) Matches(s string) bool {
@@ -2144,12 +2244,36 @@ func Init(r *js.Runtime, htm, script string) (d *Document, err error) {
 		      .catch(e => setTimeout(() => { throw e; })); // report exceptions
 		};
 
+		function CDATASection() {}
 		function CharacterData() {}
 		function HTMLIFrameElement() {}
+		function HTMLSlotElement() {}
 		function HTMLTemplateElement() {}
+
+		function NodeFilter() {}
+		function ProcessingInstruction() {}
+		function Window() {}
+
+		NodeFilter.FILTER_ACCEPT = 1;
+		NodeFilter.FILTER_REJECT = 2;
+		NodeFilter.FILTER_SKIP = 3;
+
+		NodeFilter.SHOW_ALL = 0xFFFFFFFF;
+		NodeFilter.SHOW_ELEMENT = 0x1;
+		NodeFilter.SHOW_ATTRIBUTE = 0x2;
+		NodeFilter.SHOW_TEXT = 0x4;
+		NodeFilter.SHOW_CDATA_SECTION = 0x8;
+		NodeFilter.SHOW_ENTITY_REFERENCE = 0x10;
+		NodeFilter.SHOW_ENTITY = 0x20;
+		NodeFilter.SHOW_PROCESSING_INSTRUCTION = 0x40;
+		NodeFilter.SHOW_COMMENT = 0x80;
+		NodeFilter.SHOW_DOCUMENT = 0x100;
+		NodeFilter.SHOW_DOCUMENT_TYPE = 0x200;
+		NodeFilter.SHOW_DOCUMENT_FRAGMENT = 0x400;
+		NodeFilter.SHOW_NOTATION = 0x800;
 	`)
 	if err != nil {
-		return nil, fmt.Errorf("define CharacterData: %v", err)
+		return nil, fmt.Errorf("define misc entities: %v", err)
 	}
 	NodePrototype, err = vm.RunString(`
 		function Node() {};
@@ -2165,6 +2289,9 @@ func Init(r *js.Runtime, htm, script string) (d *Document, err error) {
 		// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/hasInstance
 		Object.defineProperty(Node, Symbol.hasInstance, {
 			value: function(instance) { return instance.nodeType === 1; }
+		});
+		Object.defineProperty(Window, Symbol.hasInstance, {
+			value: function(instance) { return instance === window; }
 		});
 		Element = Node;
 		Node;`)

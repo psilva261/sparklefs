@@ -73,3 +73,16 @@ func TestWptEvents(t *testing.T) {
 		}
 	}
 }
+
+func TestWptTraversal(t *testing.T) {
+	fns := []string{
+		"NodeFilter-constants.html",
+	}
+	for _, fn := range fns {
+		t.Logf("========= %v =======", fn)
+		err := Main("test/wpt/dom/traversal", fn)
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+	}
+}
