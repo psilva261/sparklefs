@@ -95,10 +95,10 @@ type Window struct {
 	eventListeners map[string][]func(js.FunctionCall) js.Value
 }
 
-func NewWindow(builtinThis *js.Object, d *Document) *Window {
+func NewWindow(url string, builtinThis *js.Object, d *Document) *Window {
 	w := &Window{
 		Document: d,
-		Location: NewLocation(),
+		Location: NewLocation(url),
 		Navigator: Navigator{
 			UserAgent: "udom",
 		},
@@ -473,7 +473,7 @@ func (d *Document) Keys() []string {
 }
 
 func (d *Document) Domain() string {
-	return "www.example.com"
+	return d.Window.Location.Hostname
 }
 
 func (d *Document) Location() *js.Object {
@@ -2228,7 +2228,7 @@ func (el *Element) GetBoundingClientRect() *DOMRect {
 	return &DOMRect{}
 }
 
-func Init(r *js.Runtime, htm, script string) (d *Document, err error) {
+func Init(r *js.Runtime, url, htm, script string) (d *Document, err error) {
 	vm = r
 	doc, err := html.Parse(strings.NewReader(htm))
 	if err != nil {
@@ -2312,7 +2312,7 @@ func Init(r *js.Runtime, htm, script string) (d *Document, err error) {
 	}
 	d = NewDocument(doc)
 	builtinThis := vm.GlobalObject()
-	w := NewWindow(builtinThis, d)
+	w := NewWindow(url, builtinThis, d)
 	d.Window = w
 	vm.SetGlobalObject(w.Obj())
 	_, err = vm.RunString(`

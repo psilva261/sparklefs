@@ -48,23 +48,19 @@ func W3C(testFn string) (err error) {
 			return vm.ToValue(string(bs))
 		}))
 		vm.Set("initTheDocument", vm.ToValue(func(htm string) (o *js.Object) {
-			d, err := Init(vm, htm, "")
+			d, err := Init(vm, "https://example.com", htm, "")
 			if err != nil {
 				log.Fatalf(err.Error())
 			}
 			return d.Obj()
 		}))
 		vm.Set("assertEquals", vm.ToValue(func(msg string, exp, act js.Value) {
-			//_ = exp.(js.Value)
-			//_ = act.(js.Value)
 			if !exp.Equals(act) {
 				log.Printf("%v", msg)
 				log.Fatalf("%v (exp. %v but got %v)", msg, exp, act)
 			}
 		}))
 		vm.Set("assertNotEqual", vm.ToValue(func(msg string, exp, act js.Value) {
-			//_ = exp.(js.Value)
-			//_ = act.(js.Value)
 			if exp.Equals(act) {
 				log.Printf("%v", msg)
 				log.Fatalf("%v (exp. %v but did not want to get %v)", msg, exp, act)

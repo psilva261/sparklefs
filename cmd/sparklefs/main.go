@@ -24,6 +24,7 @@ var (
 	d       *runner.Runner
 	service string
 	mtpt    string
+	url     string
 	htm     string
 	js      []string
 	mu      sync.Mutex
@@ -97,7 +98,7 @@ func ctl(conn net.Conn) {
 		} else {
 			log.Printf("htm=%v", htm)
 		}
-		d = runner.New(htm, xhr, geom, query)
+		d = runner.New(url, htm, xhr, geom, query)
 		d.Start()
 		initialized := false
 		for i, s := range js {

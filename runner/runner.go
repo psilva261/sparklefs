@@ -23,7 +23,6 @@ import (
 
 var (
 	convert6to5 = os.Getenv("SPARKLEFS_6TO5")
-	origin      = "https://example.com"
 	timeout     = 60 * time.Second
 )
 
@@ -51,6 +50,7 @@ func init() {
 
 type Runner struct {
 	loop       *eventloop.EventLoop
+	url        string
 	html       string
 	outputHtml string
 	doc        *dom.Document
@@ -60,12 +60,14 @@ type Runner struct {
 }
 
 func New(
+	url string,
 	html string,
 	xhr func(req *http.Request) (resp *http.Response, err error),
 	geom func(sel string) (val string, err error),
 	query func(sel, prop string) (val string, err error),
 ) (r *Runner) {
 	r = &Runner{
+		url:   url,
 		html:  html,
 		xhrq:  xhr,
 		geom:  geom,
@@ -149,7 +151,7 @@ func (r *Runner) initVM(vm *js.Runtime) (err error) {
 	vm.SetParserOptions(parser.WithDisableSourceMaps)
 
 	console.Enable(vm)
-	r.doc, err = dom.Init(vm, r.html, "")
+	r.doc, err = dom.Init(vm, r.url, r.html, "")
 	if err != nil {
 		return fmt.Errorf("init dom: %w", err)
 	}
@@ -170,8 +172,8 @@ func (r *Runner) initVM(vm *js.Runtime) (err error) {
 	dom.Query = r.query
 	vm.Set("opossum", S{
 		HTML:     r.html,
-		Origin:   origin,
-		Referrer: func() string { return origin },
+		Origin:   r.url,
+		Referrer: func() string { return r.url },
 		XHR:  r.xhr,
 		Btoa: Btoa,
 	})

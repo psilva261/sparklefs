@@ -12,10 +12,15 @@ import (
 func Init() (err error) {
 	mtpt = "/mnt/opossum"
 	if htm != "" || len(js) > 0 {
-		log.Printf("not loading htm/js from mtpt")
+		log.Printf("not loading url/htm/js from mtpt")
 		return
 	}
-	bs, err := os.ReadFile(mtpt + "/html")
+	bs, err := os.ReadFile(mtpt + "/url")
+	if err != nil {
+		return
+	}
+	url = string(bs)
+	bs, err = os.ReadFile(mtpt + "/html")
 	if err != nil {
 		return
 	}

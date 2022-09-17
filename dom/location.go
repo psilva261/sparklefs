@@ -3,6 +3,7 @@ package dom
 import (
 	"github.com/psilva261/sparkle/js"
 	"github.com/psilva261/sparklefs/logger"
+	"net/url"
 )
 
 type Location struct {
@@ -16,14 +17,24 @@ type Location struct {
 	Hash     string
 }
 
-func NewLocation() *Location {
-	return &Location{
+func NewLocation(origin string) (l *Location) {
+	l = &Location{
 		Host:     "example.com",
 		Hostname: "example.com",
 		Href:     "https://example.com",
 		Pathname: "/",
 		Port:     "443",
 	}
+	u, err := url.Parse(origin)
+	if err != nil {
+		log.Errorf("parse %v: %v", origin, err)
+		return
+	}
+	l.Host = u.Host
+	l.Hostname = u.Hostname()
+	l.Port = u.Port()
+	l.Pathname = u.Path
+	return
 }
 
 func (l *Location) Obj() *js.Object {

@@ -38,7 +38,7 @@ func Main(dir, fn string) (err error) {
 		)
 		console.Enable(vm)
 		registry.Enable(vm)
-		d, err := Init(vm, htm, "")
+		d, err := Init(vm, "https://example.com", htm, "")
 		if err != nil {
 			log.Fatalf(err.Error())
 		}

@@ -33,13 +33,24 @@ func Init() (err error) {
 		log.Printf("not loading htm/js from service")
 		return
 	}
-	log.Printf("open html...")
-	fid, err := fsys.Open("html", plan9.OREAD)
+	log.Printf("open url...")
+	fid, err := fsys.Open("url", plan9.OREAD)
 	if err != nil {
 		return
 	}
 	defer fid.Close()
 	bs, err := io.ReadAll(fid)
+	if err != nil {
+		return
+	}
+	url = string(bs)
+	log.Printf("open html...")
+	fid, err = fsys.Open("html", plan9.OREAD)
+	if err != nil {
+		return
+	}
+	defer fid.Close()
+	bs, err = io.ReadAll(fid)
 	if err != nil {
 		return
 	}
