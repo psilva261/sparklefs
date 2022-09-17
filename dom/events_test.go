@@ -7,7 +7,7 @@ import (
 
 func TestNewEvent(t *testing.T) {
 	vm := js.New()
-	_, err := Init(vm, "<body></body>", "")
+	_, err := Init(vm, "https://example.com", "<body></body>", "")
 	if err != nil {
 		t.Fatalf("%v", err)
 	}

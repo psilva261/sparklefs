@@ -22,7 +22,7 @@ const simpleHTML = `
 `
 
 func TestSimple(t *testing.T) {
-	d := New(simpleHTML, nil, nil, nil)
+	d := New("https://example.com", simpleHTML, nil, nil, nil)
 	d.Start()
 	s := `
 	var state = 'empty';
@@ -50,12 +50,12 @@ func TestSimple(t *testing.T) {
 }
 
 func TestGlobals(t *testing.T) {
-	d := New(simpleHTML, nil, nil, nil)
+	d := New("https://example.com", simpleHTML, nil, nil, nil)
 	d.Start()
 }
 
 func TestTrackChanges(t *testing.T) {
-	d := New(simpleHTML, nil, nil, nil)
+	d := New("https://example.com", simpleHTML, nil, nil, nil)
 	d.Start()
 	_, err := d.Exec(``, true)
 	if err != nil {
@@ -145,7 +145,7 @@ func TestTrackChanges(t *testing.T) {
 }*/
 
 func TestES6(t *testing.T) {
-	d := New(simpleHTML, nil, nil, nil)
+	d := New("https://example.com", simpleHTML, nil, nil, nil)
 	d.Start()
 	script := `
 	var foo = function(data={}) {}
@@ -171,7 +171,7 @@ func TestES6(t *testing.T) {
 }
 
 func TestWindowParent(t *testing.T) {
-	d := New(simpleHTML, nil, nil, nil)
+	d := New("https://example.com", simpleHTML, nil, nil, nil)
 	d.Start()
 	script := `
 	console.log('Hello!!')
@@ -192,7 +192,7 @@ func TestWindowParent(t *testing.T) {
 }
 
 func TestReferrer(t *testing.T) {
-	d := New(simpleHTML, nil, nil, nil)
+	d := New("https://example.com", simpleHTML, nil, nil, nil)
 	d.Start()
 	script := `
 	document.referrer;
@@ -221,7 +221,7 @@ func xhr(req *http.Request) (resp *http.Response, err error) {
 }
 
 func TestXMLHttpRequest(t *testing.T) {
-	d := New(simpleHTML, xhr, nil, nil)
+	d := New("https://example.com", simpleHTML, xhr, nil, nil)
 	d.Start()
 	script := `
 		var oReq = new XMLHttpRequest();
@@ -249,7 +249,7 @@ func TestXMLHttpRequest(t *testing.T) {
 }
 
 func TestFetch(t *testing.T) {
-	d := New(simpleHTML, xhr, nil, nil)
+	d := New("https://example.com", simpleHTML, xhr, nil, nil)
 	d.Start()
 	script := `
 		var oHeaders = new Headers();
@@ -287,7 +287,7 @@ func TestJQueryAjax(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
-	d := New(simpleHTML, xhr, nil, nil)
+	d := New("https://example.com", simpleHTML, xhr, nil, nil)
 	d.Start()
 	script := `
 	var res;
@@ -325,7 +325,7 @@ func TestJQueryAjax182(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
-	d := New(simpleHTML, xhr, nil, nil)
+	d := New("https://example.com", simpleHTML, xhr, nil, nil)
 	d.Start()
 	script := `
 	var res;
@@ -359,7 +359,7 @@ func TestJQueryAjax182(t *testing.T) {
 }
 
 func TestNoJsCompatComment(t *testing.T) {
-	d := New(simpleHTML, nil, nil, nil)
+	d := New("https://example.com", simpleHTML, nil, nil, nil)
 	d.Start()
 	script := `
 
@@ -386,7 +386,7 @@ func TestJQuery(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
-	d := New(simpleHTML, nil, nil, nil)
+	d := New("https://example.com", simpleHTML, nil, nil, nil)
 	d.Start()
 	script := `
 	$(document).ready(function() {
@@ -433,7 +433,7 @@ func TestJQueryCss(t *testing.T) {
 		}
 		return "inline-block", nil
 	}
-	d := New(h, nil, nil, q)
+	d := New("https://example.com", h, nil, nil, q)
 	d.Start()
 	_, err = d.Exec(string(buf), true)
 	if err != nil {
@@ -459,7 +459,7 @@ func TestJqueryUI(t *testing.T) {
 		t.Logf("query(%v, %v)", sel, prop)
 		return "", nil
 	}
-	d := New(string(buf), xhr, nil, q)
+	d := New("https://example.com", string(buf), xhr, nil, q)
 	d.Start()
 	for i, fn := range []string{"jquery-3.6.0.js", "jquery-ui.js", "tabs.js"} {
 		buf, err := ioutil.ReadFile("jqueryui/" + fn)
@@ -504,7 +504,7 @@ func TestRun(t *testing.T) {
 	}, 1000);
 	Object.assign(this, window);
 	`
-	d := New(simpleHTML, nil, nil, nil)
+	d := New("https://example.com", simpleHTML, nil, nil, nil)
 	d.Start()
 	_, err = d.Exec(SCRIPT, true)
 	if err != nil {
@@ -534,7 +534,7 @@ func TestTriggerClick(t *testing.T) {
     	});
     });
 	`
-	d := New(simpleHTML, nil, nil, nil)
+	d := New("https://example.com", simpleHTML, nil, nil, nil)
 	d.Start()
 	_, err = d.Exec(SCRIPT, true)
 	if err != nil {
@@ -589,7 +589,7 @@ func TestTriggerClick2(t *testing.T) {
                 clicked = true;
             });
 	`
-	d := New(h, nil, nil, nil)
+	d := New("https://example.com", h, nil, nil, nil)
 	d.Start()
 	_, err = d.Exec(SCRIPT, true)
 	if err != nil {
@@ -651,7 +651,7 @@ func TestTriggerClickSubmit(t *testing.T) {
 			event.preventDefault();
 		};
 		`
-		d := New(h, nil, nil, nil)
+		d := New("https://example.com", h, nil, nil, nil)
 		d.Start()
 		_, err = d.Exec(SCRIPT, true)
 		if err != nil {
@@ -699,7 +699,7 @@ func TestDomChanged(t *testing.T) {
 	}, 1000);
 	Object.assign(this, window);
 	`
-	d := New(simpleHTML, nil, nil, nil)
+	d := New("https://example.com", simpleHTML, nil, nil, nil)
 	d.Start()
 	_, err = d.Exec(SCRIPT, true)
 	if err != nil {
@@ -733,7 +733,7 @@ func TestMutationEvents(t *testing.T) {
 		}
 		return "inline-block", nil
 	}
-	d := New(simpleHTML, nil, nil, q)
+	d := New("https://example.com", simpleHTML, nil, nil, q)
 	d.Start()
 	script := `
 	$('h1').hide();
@@ -758,7 +758,7 @@ func TestMutationEventsAddScript(t *testing.T) {
 	q := func(string, string) (string, error) {
 		return "", nil
 	}
-	d := New(simpleHTML, nil, nil, q)
+	d := New("https://example.com", simpleHTML, nil, nil, q)
 	d.Start()
 	script := `
 		var div = document.createElement('div');
@@ -801,7 +801,7 @@ func TestMutationEventsAddScript(t *testing.T) {
 }
 
 func TestBtoa(t *testing.T) {
-	d := New(simpleHTML, nil, nil, nil)
+	d := New("https://example.com", simpleHTML, nil, nil, nil)
 	d.Start()
 	res, err := d.Exec("btoa('a')", true)
 	if err != nil {
@@ -814,7 +814,7 @@ func TestBtoa(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	d := New(simpleHTML, nil, nil, nil)
+	d := New("https://example.com", simpleHTML, nil, nil, nil)
 	d.Start()
 	_, err := d.Exec("true", true)
 	if err != nil {
@@ -845,7 +845,7 @@ func TestList(t *testing.T) {
 }
 
 func TestWrite(t *testing.T) {
-	d := New(simpleHTML, nil, nil, nil)
+	d := New("https://example.com", simpleHTML, nil, nil, nil)
 	d.Start()
 	_, err := d.Exec("true", true)
 	if err != nil {

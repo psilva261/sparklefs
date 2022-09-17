@@ -24,7 +24,7 @@ document.getElementById("demo").innerHTML =
 "The title of this document is: " + document.title;
 	`
 	vm := js.New()
-	d, err := Init(vm, htm, j)
+	d, err := Init(vm, "https://example.com", htm, j)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}

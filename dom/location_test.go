@@ -8,7 +8,7 @@ import (
 func TestLocation(t *testing.T) {
 	vm = js.New()
 	htm := `<body></body>`
-	_, err := Init(vm, htm, "window.location.hash = 'test'")
+	_, err := Init(vm, "https://example.com", htm, "window.location.hash = 'test'")
 	if err != nil {
 		t.Fatalf("%v", err)
 	}

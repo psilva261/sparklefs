@@ -38,7 +38,7 @@ document.getElementById("demo").innerHTML =
 
 func TestNodeName(t *testing.T) {
 	vm := js.New()
-	_, err := Init(vm, htm, "")
+	_, err := Init(vm, "https://example.com", htm, "")
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -55,7 +55,7 @@ document.nodeName.toLowerCase();
 
 func TestIsNode(t *testing.T) {
 	vm := js.New()
-	_, err := Init(vm, htm, "")
+	_, err := Init(vm, "https://example.com", htm, "")
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -78,7 +78,7 @@ window.document.info = 456;
 df = document.createDocumentFragment('p');
 df.info = 789;
 	`
-	d, err := Init(vm, htm, j)
+	d, err := Init(vm, "https://example.com", htm, j)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -116,7 +116,7 @@ document.getElementById("demo").innerHTML =
 "The title of this document is: " + document.title;
 	`
 	vm := js.New()
-	d, err := Init(vm, htm, j)
+	d, err := Init(vm, "https://example.com", htm, j)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -152,7 +152,7 @@ document.getElementById("demo").innerHTML =
 	loop.Start()
 	defer loop.Stop()
 	loop.RunOnLoop(func(vm *js.Runtime) {
-		d, err := Init(vm, htm, j)
+		d, err := Init(vm, "https://example.com", htm, j)
 		if err != nil {
 			errCh <- fmt.Errorf("main: %w", err)
 			return
@@ -239,7 +239,7 @@ func TestJQueryPrependTo(t *testing.T) {
 	loop.Start()
 	defer loop.Stop()
 	loop.RunOnLoop(func(vm *js.Runtime) {
-		d, err := Init(vm, htm, j)
+		d, err := Init(vm, "https://example.com", htm, j)
 		if err != nil {
 			errCh <- fmt.Errorf("main: %w", err)
 			return
@@ -303,7 +303,7 @@ document.body.appendChild(p);
 	loop.Start()
 	defer loop.Stop()
 	loop.RunOnLoop(func(vm *js.Runtime) {
-		document, err := Init(vm, htm, j)
+		document, err := Init(vm, "https://example.com", htm, j)
 		if err != nil {
 			errCh <- fmt.Errorf("main: %w", err)
 			return
@@ -350,7 +350,7 @@ $('body').append('<p>Test</p>');
 	loop.Start()
 	defer loop.Stop()
 	loop.RunOnLoop(func(vm *js.Runtime) {
-		document, err := Init(vm, htm, j)
+		document, err := Init(vm, "https://example.com", htm, j)
 		if err != nil {
 			errCh <- fmt.Errorf("main: %w", err)
 			return
@@ -402,7 +402,7 @@ $('h2').click(function() {
 	loop.Start()
 	defer loop.Stop()
 	loop.RunOnLoop(func(vm *js.Runtime) {
-		document, err := Init(vm, htm, j)
+		document, err := Init(vm, "https://example.com", htm, j)
 		if err != nil {
 			errCh <- fmt.Errorf("main: %w", err)
 			return
@@ -496,7 +496,7 @@ $('.av').each(function(i, el) {
 	loop.Start()
 	defer loop.Stop()
 	loop.RunOnLoop(func(vm *js.Runtime) {
-		document, err := Init(vm, htm, j)
+		document, err := Init(vm, "https://example.com", htm, j)
 		if err != nil {
 			errCh <- fmt.Errorf("main: %w", err)
 			return
@@ -577,7 +577,7 @@ $( function() {
 	var d *Document
 	loop.RunOnLoop(func(vm *js.Runtime) {
 		var err error
-		d, err = Init(vm, htm, "")
+		d, err = Init(vm, "https://example.com", htm, "")
 		if err != nil {
 			errCh <- fmt.Errorf("main: %w", err)
 			return
@@ -645,7 +645,7 @@ $( function() {
 	var d *Document
 	loop.RunOnLoop(func(vm *js.Runtime) {
 		var err error
-		d, err = Init(vm, htm, "")
+		d, err = Init(vm, "https://example.com", htm, "")
 		if err != nil {
 			errCh <- fmt.Errorf("main: %w", err)
 			return
@@ -732,7 +732,7 @@ $( function() {
 	var d *Document
 	loop.RunOnLoop(func(vm *js.Runtime) {
 		var err error
-		d, err = Init(vm, htm, "")
+		d, err = Init(vm, "https://example.com", htm, "")
 		if err != nil {
 			errCh <- fmt.Errorf("main: %w", err)
 			return
@@ -845,7 +845,7 @@ func TestJqueryFadeIn(t *testing.T) {
 	defer loop.Stop()
 	loop.RunOnLoop(func(vm *js.Runtime) {
 		var err error
-		d, err = Init(vm, htm, j)
+		d, err = Init(vm, "https://example.com", htm, j)
 		if err != nil {
 			errCh <- fmt.Errorf("main: %w", err)
 			return
@@ -920,7 +920,7 @@ $( function() {
 	defer loop.Stop()
 	loop.RunOnLoop(func(vm *js.Runtime) {
 		var err error
-		d, err = Init(vm, htm, "")
+		d, err = Init(vm, "https://example.com", htm, "")
 		if err != nil {
 			errCh <- fmt.Errorf("main: %w", err)
 			return
@@ -1027,7 +1027,7 @@ var clicked = 0;
 	loop.Start()
 	defer loop.Stop()
 	loop.RunOnLoop(func(vm *js.Runtime) {
-		document, err := Init(vm, htm, j)
+		document, err := Init(vm, "https://example.com", htm, j)
 		if err != nil {
 			errCh <- fmt.Errorf("main: %w", err)
 			return
@@ -1135,7 +1135,7 @@ global.document = document;
 	var d *Document
 	loop.RunOnLoop(func(vm *js.Runtime) {
 		var err error
-		d, err = Init(vm, string(htm), j)
+		d, err = Init(vm, "https://example.com", string(htm), j)
 		if err != nil {
 			errCh <- fmt.Errorf("main: %w", err)
 			return
@@ -1235,7 +1235,7 @@ document.addEventListener('click', f);
 		loop.Start()
 		defer loop.Stop()
 		loop.RunOnLoop(func(vm *js.Runtime) {
-			document, err := Init(vm, ht, script)
+			document, err := Init(vm, "https://example.com", ht, script)
 			if err != nil {
 				errCh <- fmt.Errorf("main: %w", err)
 				return
