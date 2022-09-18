@@ -363,7 +363,7 @@ type Document struct {
 	vars   map[string]js.Value
 	elRefs map[*html.Node]*Element
 
-	eventListeners map[string][]func(js.FunctionCall) js.Value
+	eventListeners map[string][]*js.Object
 }
 
 func NewDocument(doc *html.Node) (d *Document) {
@@ -372,7 +372,7 @@ func NewDocument(doc *html.Node) (d *Document) {
 	}
 	d.vars = make(map[string]js.Value)
 	d.elRefs = make(map[*html.Node]*Element)
-	d.eventListeners = make(map[string][]func(js.FunctionCall) js.Value)
+	d.eventListeners = make(map[string][]*js.Object)
 	return
 }
 
@@ -428,6 +428,18 @@ func (d *Document) Get(key string) js.Value {
 	if v, ok := d.vars[key]; ok {
 		log.Printf("document found var %v", key)
 		return v
+	}
+	if key == "addEventListener" || key == "attachEvent" {
+		// dispatch here because 2nd parameter can be a function or an object
+		c := &Call{
+			recv:  "*dom.Document",
+			k:     key,
+			found: true,
+		}
+		calls = append(calls, c)
+		return vm.ToValue(func(e string, fn *js.Object, opts ...any) {
+			d.AddEventListener(e, fn, opts)
+		})
 	}
 	if res, ok := GetCall(d, key); ok {
 		return res
@@ -663,17 +675,12 @@ func (d *Document) Write(s string) {
 	}
 }
 
-func (d *Document) AttachEvent(e string, f func(js.FunctionCall) js.Value, opts ...any) {
+func (d *Document) AttachEvent(e string, f *js.Object, opts ...any) {
 	d.AddEventListener(e, f, opts...)
 }
 
-func (d *Document) AddEventListener(e string, fn any, opts ...any) {
-	f, ok := fn.(func(js.FunctionCall) js.Value)
-	if !ok {
-		log.Errorf("document add event listener unexpected %T %+v", fn, fn)
-	}
-	log.Printf("Document AddEventListener(%v, %v)", e, fn)
-	d.eventListeners[e] = append(d.eventListeners[e], f)
+func (d *Document) AddEventListener(e string, fn *js.Object, opts ...any) {
+	d.eventListeners[e] = append(d.eventListeners[e], fn)
 }
 
 func (d *Document) RemoveEventListener(e string, f func(js.FunctionCall) js.Value, opts ...any) {
@@ -690,19 +697,31 @@ func (d *Document) RemoveEventListener(e string, f func(js.FunctionCall) js.Valu
 }
 
 func (d *Document) DispatchEvent(e *Event) {
-	for _, f := range d.eventListeners[e.Type] {
+	for _, x := range d.eventListeners[e.Type] {
+		var f func(js.FunctionCall) js.Value
+		var this = d.Obj()
+		switch v := x.Export().(type) {
+		case func(js.FunctionCall) js.Value:
+			f = v
+		case map[string]any:
+			var ok bool
+			f, ok = v["handleEvent"].(func(js.FunctionCall) js.Value)
+			if !ok {
+				log.Errorf("doc dispatch event: handleEvent is not a function")
+				continue
+			}
+			this = x
+		default:
+			log.Errorf("unexpected event handler %+v %T", x, x) // TODO Errorf
+		}
 		fn, ok := js.AssertFunction(vm.ToValue(f))
 		if !ok {
 			log.Errorf("doc assert function: %v", ok)
 			e.Consumed = true
 			continue
 		}
-		/*that, err := vm.RunString("this")
-		if err != nil {
-			log.Fatalf("oh no: %v", err)
-			continue
-		}*/
-		_, err := fn(d.Obj(), e.Obj())
+		e.Consumed = true
+		_, err := fn(this, e.Obj())
 		if err != nil {
 			log.Errorf("doc event handler fn: %v", err)
 			e.Consumed = true
@@ -1271,7 +1290,7 @@ func (el *Element) DispatchEvent(ei any) bool {
 			case map[string]any:
 				f, ok = v["handleEvent"].(func(js.FunctionCall) js.Value)
 				if !ok {
-					log.Errorf("handleEvent is not a function")
+					log.Errorf("el dispatch event: handleEvent is not a function")
 					continue
 				}
 				this = x

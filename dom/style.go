@@ -46,7 +46,9 @@ func (s *Style) Obj() *js.Object {
 }
 
 func (s *Style) Getters() map[string]bool {
-	return map[string]bool{}
+	return map[string]bool{
+		"length": true,
+	}
 }
 
 func (s *Style) Props() map[string]bool {
@@ -67,6 +69,12 @@ func (s *Style) Get(k string) (v js.Value) {
 		return vm.ToValue("")
 	}
 	return vm.ToValue(nil)
+}
+
+func (s *Style) Length() int {
+	st := attr(*s.n, "style")
+	m := parseStyle(st)
+	return len(m)
 }
 
 func kebab(k string) (res string) {
