@@ -2273,6 +2273,10 @@ func Init(r *js.Runtime, url, htm, script string) (d *Document, err error) {
 		function ProcessingInstruction() {}
 		function Window() {}
 
+		function error(msg) {
+			console.log(msg);
+		}
+
 		NodeFilter.FILTER_ACCEPT = 1;
 		NodeFilter.FILTER_REJECT = 2;
 		NodeFilter.FILTER_SKIP = 3;

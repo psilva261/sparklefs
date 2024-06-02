@@ -170,7 +170,7 @@ func (r *Runner) initVM(vm *js.Runtime) (err error) {
 	//vm.SetFieldNameMapper(js.TagFieldNameMapper("json", true))
 	dom.Geom = r.geom
 	dom.Query = r.query
-	vm.Set("opossum", S{
+	vm.Set("mycel", S{
 		HTML:     r.html,
 		Origin:   r.url,
 		Referrer: func() string { return r.url },

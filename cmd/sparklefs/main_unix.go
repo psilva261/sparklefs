@@ -16,7 +16,7 @@ var fsys *client.Fsys
 
 func Init() (err error) {
 	log.Printf("Init...")
-	conn, err := client.DialService("opossum")
+	conn, err := client.DialService("mycel")
 	if err != nil {
 		log.Fatalf("dial: %v", err)
 	}

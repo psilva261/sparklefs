@@ -10,7 +10,7 @@ import (
 )
 
 func Init() (err error) {
-	mtpt = "/mnt/opossum"
+	mtpt = "/mnt/mycel"
 	if htm != "" || len(js) > 0 {
 		log.Printf("not loading url/htm/js from mtpt")
 		return

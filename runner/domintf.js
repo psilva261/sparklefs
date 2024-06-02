@@ -8,15 +8,15 @@ window.screen = {
 window.screenX = 0;
 window.screenY = 25;
 
-btoa = opossum.btoa;
+btoa = mycel.btoa;
 
 location = window.location;
 navigator = {
 	platform: 'plan9(port)',
-	userAgent: 'opossum'
+	userAgent: 'mycel'
 };
 
-___opossumSubmit = function(a, b, c) {
+___mycelSubmit = function(a, b, c) {
 	if (this.onsubmit) this.onsubmit()
 	console.log('submit()');
 	if (this.tagName === 'BUTTON' || this.tagName === 'INPUT') {
@@ -79,7 +79,7 @@ function XMLHttpRequest() {
 		h[k] = v;
 	};
 	this.send = function(data) {
-		opossum.xhr(_method, _uri, h, data, cb);
+		mycel.xhr(_method, _uri, h, data, cb);
 		this.readyState = 2;
 	};
 	this.getAllResponseHeaders = function() {
@@ -160,7 +160,7 @@ function fetch(resource, init) {
 				resolve(new Response(data));
 			}
 		};
-		opossum.xhr(method, url, hs, body, cb);
+		mycel.xhr(method, url, hs, body, cb);
 	});
 }
 
